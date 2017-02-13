@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+    <style type="text/css">
+        *{
+            padding: 0;
+            margin:0;
+        }
+        html,body{
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            overflow: hidden;
+            font-family:  "Microsoft Yahei UI" !important;
+        }
+        ul{
+            list-style: none;
+        }
+        #main{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+        #title{
+            width: 100%;
+            margin-top: 15px ;
+            position: relative;
+            z-index: 3;
+            color: white;
+            text-align: center;
+        }
+        .attackContents{
+            color: lightgrey;
+            position: absolute;
+            left:20px;
+            bottom: 20px;
+            z-index: 2;
+        }
+        .attackContents_item{
+            background-color: rgba(30,144,255,0.2);
+            width: 190px;
+            /*margin-right: 2px;*/
+            display: inline-block;
+        }
+        .attackContents_item li{
+            padding: 3px;
+            text-align: center;
+        }
+        .attackContents_item_title{
+            font-size: 1em;
+            background-color: rgba(30,144,255,0.3);
+            padding: 5px 0 !important;
+        
+    </style>
+</head>
+
+<body>
+    <div id="title">
+        <h3>DDos 攻击来势汹汹 <br/>DDos Attacks More Ferocious Than Ever </h3>
+    </div>
+
+    <div id="main" class="datachart" >
+              
+    </div>
+
+    <div class="attackContents">
+        <ul class="attackContents_item" id="beAttack">
+            <li class="attackContents_item_title">被攻击城市</li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+        </ul>
+        <ul class="attackContents_item" id="attack">
+            <li class="attackContents_item_title">发起攻击城市</li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+        </ul>
+        <ul class="attackContents_item" id="byte">
+            <li class="attackContents_item_title">攻击流量（GByte）</li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+        </ul>
+        <ul class="attackContents_item" id="times">
+            <li class="attackContents_item_title">攻击次数</li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+            <li class="attackContents_item_content"></li>
+        </ul>
+    </div>
+          
+
+		
+
+    <script src="lib/echarts.min.js"></script>
+    <script src="lib/jquery-3.1.1.min.js"></script>
+    <script src="./js/china.js"></script>
+  
+
+        <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        var color = ['#a6c84c', '#ffa022', '#46bee9']
+            ,series = []
+            ,option
+            ,LineData = []
+            ,MaxSourceCount = 30
+
+          var countries = [
+           '北京', '长春', '长沙', '成都', '福州', '广州', '贵阳', '哈尔滨', '海口', '杭州', '合肥', '呼和浩特', '济南', '昆明', '拉萨', '兰州', '南昌', '南京', '南宁', '上海', '沈阳', '石家庄', '太原', '天津', '乌鲁木齐', '武汉', '西安', '西宁', '银川', '郑州', '重庆'
+        ];
+
+        var geoCoordMap = {
+            '北京': [116.5, 39.9], '长春': [125.31, 43.88], '长沙': [112.97, 28.2], '成都': [104.07, 30.67], '福州': [119.3, 26.07], '广州': [113.24, 23.13], '贵阳': [106.7, 26.57], '哈尔滨': [126.61, 45.73], '海口': [110.34, 20.04], '杭州': [120.16, 30.25], '合肥': [117.27, 31.86], '呼和浩特': [111.65, 40.81], '济南': [116.97, 36.66], '昆明': [102.7, 25.05], '拉萨': [91.13, 29.65], '兰州': [103.6, 36.11], '南昌': [115.89, 28.67], '南京': [118.77, 32.05], '南宁': [108.31, 22.83], '上海': [121.48, 31.24], '沈阳': [123.41, 41.79], '石家庄': [114.49, 38.04], '太原': [112.55, 37.89], '天津': [117.2, 39.15], '乌鲁木齐': [87.59, 43.79], '武汉': [114.28, 30.57], '西安': [108.88, 34.27], '西宁': [101.76, 36.62], '银川': [106.27, 38.46], '郑州': [113.65, 34.76], '重庆': [106.52, 29.54]
+        };
+
+
+//         var attackList = [
+// { 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '北京', 'Duration': '327' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,重庆,成都,昆明,拉萨,乌鲁木齐,兰州,海口,福州,西安', 'Destination': '天津', 'Duration': '68' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,西安', 'Destination': '上海', 'Duration': '424' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,上海,西安', 'Destination': '福州', 'Duration': '1117' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '合肥', 'Duration': '130' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '南京', 'Duration': '2038' },
+// { 'Source': '北京,沈阳,济南,南京,杭州,呼和浩特,太原,合肥,长沙,郑州,广州,南宁,重庆,成都,银川,海口,福州,上海,西安', 'Destination': '南昌', 'Duration': '25' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '济南', 'Duration': '215' },
+// { 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,北京,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '杭州', 'Duration': '1782' },
+// { 'Source': '北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '哈尔滨', 'Duration': '43' },
+// { 'Source': '哈尔滨,长春,北京,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '沈阳', 'Duration': '228' },
+// { 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,北京,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川', 'Destination': '长沙', 'Duration': '757' },
+// { 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,北京,海口,福州,上海,西安', 'Destination': '广州', 'Duration': '1289' },
+// { 'Source': '北京,南京,广州,上海,杭州', 'Destination': '海口', 'Duration': '7' },
+// { 'Source': '哈尔滨,北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '南宁', 'Duration': '334' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '贵阳', 'Duration': '105' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '成都', 'Duration': '237' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '重庆', 'Duration': '168' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,乌鲁木齐,西宁,银川,海口,福州,上海', 'Destination': '兰州', 'Duration': '53' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海', 'Destination': '西安', 'Duration': '304' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,西宁,兰州,银川,海口,福州,上海', 'Destination': '乌鲁木齐', 'Duration': '29' },
+// { 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,南昌,广州,南宁,贵阳,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海', 'Destination': '郑州', 'Duration': '410' },
+// { 'Source': '北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,兰州,银川,海口,福州,上海,西安', 'Destination': '武汉', 'Duration': '155' },
+
+// ];
+
+     var attackList = [
+{ 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '北京', 'Duration': '327','byte':'13.42,11.04,21.14,8.82,53.17,154.41,118.04,67.13,8.78,32.70,146.06,112.17,43.77,30.91,113.87,283.03,75.11,7.94,14.79,37.01,124.01,39.92,2050,2.34,15.22,6.76,4.17,170.01,33.13,15.22','times':'8,9,10,9,10,13,12,13,12,10,13,13,13,12,13,13,13,8,9,13,11,6,11,4,12,9,10,13,13,12'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,重庆,成都,昆明,拉萨,乌鲁木齐,兰州,海口,福州,西安', 'Destination': '天津', 'Duration': '68' ,'byte':'16.34,1.92,0.10,0.95,16.34,0.91,13.35,19,68,0.72,1.06,0.27,0.28,3.28,0.25,1.37,0.09,21.89,3.54,0.38,2.54,5.65,0.04,7.06,2.83,0.09,1.94,1.54','times':'3,3,3,3,3,3,3,3,3,3,2,1,3,1,3,2,3,1,1,3,3,2,3,3,1,3,3'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,西安', 'Destination': '上海', 'Duration': '424' ,'byte':'176.19,137.21,93.87,156.91,41.10,345.04,205.80,418.31,180.99,129.92,93.66,248.51,95.03,144.86,100.41,108.22,525.39,72.16,58.55,77.48,77.75,131.17,26.60,107.80,23.15,151.23,3.38,19.49,328.40,47.21' ,'times':'3,18,11,12,13,10,14,17,17,17,12,10,18,16,17,18,17,18,17,12,11,17,13,8,16,8,18,12,9,18,10'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,上海,西安', 'Destination': '福州', 'Duration': '1117','byte':'1320,419.59,346.88,565.88,89.49,2630,2070,2680,348.23,624.69,841.91,744.69,563.80,563.80,689.68,642.02,3370,3410,1060,179.35,427.36,324.48,678.11,102.80,765.24,69.18,408.31,176.07,77.69,218.51,96.65','times':'45,32,37,38,41,44,44,44,42,42,32,44,41,45,46,45,46,43,41,42,43,38,30,41,25,39,29,30,8,7' },
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '合肥', 'Duration': '130' ,'byte':'23.35,6.07,4.59,8.92,2.37,18.10,22.68,54.75,4.42,7.68,4.77,4.77,6.52,5.16,8.14,50.30,8.50,1.92,4.29,3.92,5.16,0.74,9.10,0.30,8.42,1.31,1.22,7.51,7.92,7.32' ,'times':'5,3,4,5,5,4,4,4,5,4,5,4,5,5,4,5,4,5,4,5,4,4,4,2,4,4,4,5,5,5' },
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '南京', 'Duration': '2038' ,'byte':'5630,1120,458.52,880.91,410.60,2300,4140,6120,764.44,1220,1480,1860,737.94,1060,2420,6890,980,255.12,938.75,1520,1360,237.38,1010,65.46,831.34,122.86,149.08,1160,1620,668.97' ,'times' :'77,65,63,70,54,71,77,74,70,69,72,73,75,78,75,79,71,61,72,74,56,39,73,39,71,51,71,76,76,66'},
+{ 'Source': '北京,沈阳,济南,南京,杭州,呼和浩特,太原,合肥,长沙,郑州,广州,南宁,重庆,成都,银川,海口,福州,上海,西安', 'Destination': '南昌', 'Duration': '25' ,'byte' :'0.00,0.00,0.00,0.00,0.01,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00' , 'times':'2,1,1,1,2,1,1,1,1,1,2,1,2,2,1,1,1,2,1'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '济南', 'Duration': '215' ,'byte':'218.48,92.24,35.36,60.97,21.66,451.87,344.93,199.73,55.32,46.48,57.02,99.22,35.18,49.26,33.94,463.34,109.92,14.24,37.74,52.69,56.28,17.58,52.01,2190,77.99,16.30,6.38,84.15,39.53,57.19' ,'times':'8,7,7,8,8,7,8,9,7,6,8,8,6,8,7,9,7,8,7,6,8,4,7,5,8,5,5,9,8,7'},
+{ 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,北京,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '杭州', 'Duration': '1782' ,'byte':'212.08,98.95,423.97,139.13,780.02,5350,5000,828.57,366.37,1080,1030,1600,638.08,370.95,1080,8080,1080,142.76,648.61,646.82,2680,771.60,1320,116.68,771.87,80.29,51.96,1560,1270,1080' ,'times':'58,41,58,58,61,67,68,67,59,51,66,67,59,51,66,67,66,66,65,68,65,65,57,66,64,51,62,35,63,44,36,66,64,58'},
+{ 'Source': '北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '哈尔滨', 'Duration': '43' ,'byte':'4550,2.32,3.98,1.27,0.60,12.19,8.16,1.74,3.67,1.17,6.85,1.73,1.13,3.37,16.71,0.00,0.22,0.54,1.95,8.99,2.62,0.03,5.36,1.42,0.32,4.04,0.39,0.40' ,'times':'2,1,2,2,1,1,2,1,2,1,2,2,2,1,2,1,1,2,1,2,2,1,2,1,1,2,2,1'},
+{ 'Source': '哈尔滨,长春,北京,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '沈阳', 'Duration': '228' ,'byte':'11.83,6.23,302.86,20.90,22.01,53.45,1889.10,4.63,7.25,20.29,31.82,14.97,9.49,35.56,7.86,175.78,15.72,4.93,3.87,44.61,4.91,1.59,14.08,0.65,13.66,0.65,3.32,25.65,111.14,84.56' ,'times':'9,9,9,9,9,9,9,9,9,9,3,9,9,9,9,9,3,3,3,9,9,9,9,3,9,3,3,9,9,9'},
+{ 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,北京,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川', 'Destination': '长沙', 'Duration': '757' ,'byte':'246.21,126.43,326.78,129.71,43.03,285.30,559.06,160.64,183.59,174.01,138.17,317.52,2340,363.37,49.23,850.13,56.03,17.34,44.46,160.16,326.38,188.06,1.97,317.48,36.94,23.83,209.49,443.10,400.67' ,'times':'30,29,31,28,31,29,31,30,30,30,14,27,31,31,29,31,5,14,12,29,31,20,31,11,30,11,11,31,28,31' },
+{ 'Source': '哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,北京,海口,福州,上海,西安', 'Destination': '广州', 'Duration': '1289' ,'byte':'727.87,410.68,766.86,252.55,609.02,339.35,1320,495.67,656.42,340.29,731.12,411.89,263.71,374.04,312.29,248.63,144.30,354.92,192.10,476.57,110.57,455.16,39.59,908.48,228.23,1200,93.56,829.60,339.35,195.66' , 'times':'40,39,45,43,43,43,47,47,42,38,48,48,42,47,43,44,46,44,42,46,30,46,36,45,35,48,37,48,43,44'},
+{ 'Source': '北京,南京,广州,上海,杭州', 'Destination': '海口', 'Duration': '7' ,'byte':'6.64,0.00,0.00,0.00,0.00','times':'2,1,2,1,1'},
+{ 'Source': '哈尔滨,北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '南宁', 'Duration': '334' ,'byte':'127.80,1220,68.18,451.10,32.72,353.74,1350,7020,89.50,114.49,113.34,158.21,1.10,280.92,1620,499.52,2.78,33.45,47.78,59.61,781.31,19.60,1840,2950,645.38,504.37,187.02,973.61,1740,36.91','times':'12,12,12,12,12,12,9,12,12,12,12,12,12,9,12,9,12,12,12,11,12,4,12,7,12,12,12,12,12,9,12'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '贵阳', 'Duration': '105' ,'byte':'32.61,8.00,4.89,8.30,3.31,13.55,10.28,14.64,3.04,6.74,3.45,11.76,15.85,2.42,6.08,13.04,44.30,10.01,1.60,1.00,16.66,0.19,16.97,0.08,9.67,1.41,0.82,5.54,3.61' ,'times':'4,4,4,4,4,3,3,4,4,3,4,2,4,4,4,3,4,3,4,4,4,2,4,3,4,1,2,4,4,4' },
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '成都', 'Duration': '237' ,'byte':'613.62,86.76,65.22,75.97,55.01,30.49,180.86,353.52,85.09,65.85,42.39,197.85,117.77,22.08,68.76,59.64,441.41,88.07,13.61,12.29,123.88,4.68,115.06,0.48,112.52,0.06,11.72,97.65,121.12,125.24' ,'times':'10,9,8,8,8,7,8,8,9,9,7,9,9,7,9,8,9,7,9,8,9,2,8,4,9,5,8,9,9,8'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海,西安', 'Destination': '重庆', 'Duration': '168' ,'byte':'114.66,6.63,5.53,12.19,4.74,39.07,45.32,142.38,1.96,6.34,7.02,26.94,12.84,12.61,13.31,7.36,99.24,10.54,5.09,24.36,5.95,0.26,4.00,1.33,6.02,1.47,2.32,19.03,58.36,25.10','times':'6,6,6,6,6,6,6,6,6,5,6,5,6,5,6,5,6,5,5,6,6,6,6,4,6,3,5,6,6,6'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,乌鲁木齐,西宁,银川,海口,福州,上海', 'Destination': '兰州', 'Duration': '53' ,'byte':'1.31,11.30,5.88,10.16,3.13,0.07,0.23,2.54,4.49,9.20,2.83,4.61,2.53,0.03,3.22,0.02,17.85,0.15,0.70,1.39,0.08,1.26,4.75,0.15,2.51,0.95,7.11,0.08','times':'2,2,2,2,2,1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1,2,2,2'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海', 'Destination': '西安', 'Duration': '304' ,'byte':'7.86,63.26,58.82,123.39,56.62,303.22,902.96,621.71,161.79,60.32,57.96,130.65,74.87,122.07,80.16,103.53,999.87,182.50,78.09,121.69,44.27,77.64,92.09,68.82,11.63,50.46,12.26,19.58,291.54,106.85','times':'2,11,10,10,11,11,11,11,10,10,10,10,11,9,11,10,11,11,10,11,11,11,10,11,9,11,9,10,11,10'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,西宁,兰州,银川,海口,福州,上海', 'Destination': '乌鲁木齐', 'Duration': '29' ,'byte':'9.34,4.54,1.54,2.92,0.53,2.99,9.19,7.36,1.58,2.85,2.08,2.99,3.22,0.45,0.81,1.70,12.43,1.54,0.25,0.54,1.92,3.88,0.62,0.02,4.50,0.90,0.26,3.10,1.33','times':'1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1'},
+{ 'Source': '北京,哈尔滨,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,武汉,长沙,南昌,广州,南宁,贵阳,成都,昆明,拉萨,乌鲁木齐,西宁,兰州,银川,海口,福州,上海', 'Destination': '郑州', 'Duration': '410' ,'byte':'294.05,13.99,13.41,24.26,12.01,53.96,111.23,146.32,12.15,12.64,31.66,49.18,95.58,24.98,72.91,280.02,55.88,4.03,22.01,105.39,9.61,98.00,0.80,19.08,6.05,2.33,22.32,38.60' , 'times':'17,11,17,16,16,17,17,17,17,14,17,16,17,15,16,17,13,6,17,17,7,17,1,17,13,12,16,17'},
+{ 'Source': '北京,长春,沈阳,天津,济南,南京,杭州,呼和浩特,石家庄,太原,合肥,长沙,郑州,南昌,广州,南宁,贵阳,重庆,成都,昆明,拉萨,乌鲁木齐,兰州,银川,海口,福州,上海,西安', 'Destination': '武汉', 'Duration': '155' ,'byte':'48.51,1.55,1.09,0.62,3.02,28.97,29.94,9.78,4.61,8.05,0.72,2.45,3.37,7.29,51.28,0.31,0.27,0.03,6.93,27.72,6.11,14.72,4.25,0.00,0.03,8.52,5.54,1.99','times':'6,6,6,5,6,6,5,6,6,5,6,6,6,6,6,6,6,4,6,6,5,5,6,1,6,6,6,5'},
+
+];
+        function trimStr(str){return str.replace(/(^\s*)|(\s*$)/g,"");}
+
+        function sleep(n){
+            var start = new Date().getTime();
+            while(true){
+                 if(new Date().getTime()-start > n)
+                    break;
+            }
+        }
+
+        //等比例缩放
+        var getDuration = function(realValue){
+            var minRealValue = 5;
+            var maxRealValue = 360;
+            var minValue = 5;
+            var maxValue = 10;
+
+            return ((realValue-minRealValue)/(maxRealValue-minRealValue))*(maxValue-minValue)+minValue;
+
+        }
+
+        var convertData = function (data) {
+            var res = [];
+            for (var i = 0; i < data.length; i++) {
+                var dataItem = data[i];
+                var fromCoord = geoCoordMap[dataItem[0].name];
+                var toCoord = geoCoordMap[dataItem[1].name];
+                if (fromCoord && toCoord) {
+                    res.push({
+                        fromName: dataItem[0].name,
+                        toName: dataItem[1].name,
+                        coords: [fromCoord, toCoord]
+                    });
+                }
+            }
+            return res;
+        };
+
+
+
+       var setOption = function(){
+
+        [['', LineData]].forEach(function (item, i) {
+            series = [];
+            series.push({
+                name: item[0],
+                type: 'lines',
+                zlevel: 1,
+                effect: {
+                    show: true,
+                    period: 2.3,
+                    trailLength: 0.8,
+                    color: '#fff',
+                    symbolSize: 3
+                },
+                lineStyle: {
+                    normal: {
+                        color: color[i],
+                        width: 0,
+                        curveness: 0.1
+                    }
+                },
+                data: convertData(item[1])
+            },
+            {
+                name: item[0],
+                type: 'effectScatter',
+                coordinateSystem: 'geo',
+                zlevel: 2,
+                rippleEffect: {
+                    brushType: 'stroke'
+                },
+                label: {
+                    normal: {
+                        show: false,
+                        position: 'right',
+                        formatter: '{b}'
+                    }
+                },
+                symbolSize: function (val) {
+                    return val[2] / 10;
+                },
+                itemStyle: {
+                    normal: {
+                        color: '#FF0000'
+                    }
+                },
+                data: item[1].map(function (dataItem) {
+                    return {
+                        name: dataItem[1].name,
+                        value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
+                    };
+                })
+            },
+            {
+                name: item[0],
+                type: 'effectScatter',
+                coordinateSystem: 'geo',
+                zlevel: 3,
+                rippleEffect: {
+                    brushType: 'stroke'
+                },
+                label: {
+                    normal: {
+                        show: false,
+                        position: 'right',
+                        formatter: '{b}'
+                    }
+                },
+                symbolSize: function (val) {
+                    return val[2] / 10;
+                },
+                itemStyle: {
+                    normal: {
+                        color: color[i]
+                    }
+                },
+                data: item[1].map(function (dataItem) {
+                    return {
+                        name: dataItem[0].name,
+                        value: geoCoordMap[dataItem[0].name].concat([95])
+                    };
+                })
+            }
+        );
+        });
+
+        option = {
+            // backgroundColor: '#404a59',
+
+            geo: {
+                //map: 'world',
+                map: 'china',
+                label: {
+                    emphasis: {
+                        show: false
+                    }
+                },
+                roam: true,
+                itemStyle: {
+                    normal: {
+                        areaColor: '#1e90ff',
+                        borderColor: '#404a59'
+                    },
+                    emphasis: {
+                        areaColor: '#2a333d'
+                    }
+                }
+            },
+            series: series
+        };
+
+        }
+
+        var setLineData = function(sourceArray,dest){
+            LineData = [];
+            for(var j = 0;j<sourceArray.length;j++){
+                if(j > MaxSourceCount){
+                    break;
+                }
+                var s = sourceArray[j];
+                if(typeof(s)=="undefined" || s == ""){
+                    continue;
+                }
+
+                if(typeof(dest)=="undefined" || dest == ""){
+                    continue;
+                }
+
+                s = trimStr(s);
+                if(countries.indexOf(s) == -1){
+                    continue;
+                }
+
+                dest = trimStr(dest);
+                if(countries.indexOf(dest) == -1){
+                    continue;
+                }
+
+                var newData = [{ 'name': s }, { 'name': dest, 'value': 95 }];
+                LineData.push(newData);
+            }
+        }
+
+
+       var attackListIndex = 0;
+       function loadChart(){
+            var item,sourceArray,dest,duration
+            item = attackList[attackListIndex];
+            sourceArray = item.Source.split(",");
+            dest = trimStr(item.Destination);
+            duration = parseInt(getDuration(item.Duration))*1000;
+
+            var contentsData = [],
+                i = 0,
+                byteArr = item.byte.split(','),
+                timesArr = item.times.split(',');
+
+            while(i < sourceArray.length){
+                contentsData.push({
+                    'beAttack':dest,
+                    'attack':sourceArray[i],
+                    'byte':byteArr[i],
+                    'times':timesArr[i++]
+                });
+            }
+
+            showContents(contentsData,duration);
+
+            setLineData(sourceArray,dest);
+
+            if(LineData.length > 0){
+                 setOption();
+                 myChart.clear();
+                 myChart.setOption(option);
+            }
+
+            attackListIndex ++;
+            if(attackListIndex ==  attackList.length){
+                attackListIndex = 0
+            }
+
+            if(attackListIndex < attackList.length){
+                setTimeout("loadChart()", duration);
+            }
+
+
+        }
+
+
+        var beAttackLis = $('#beAttack .attackContents_item_content');
+        var attackLis = $('#attack .attackContents_item_content');
+        var byteLis = $('#byte .attackContents_item_content');
+        var timesLis = $('#times .attackContents_item_content');
+
+
+        var contentsDom = [],j=0;
+        while(j < beAttackLis.length){
+            contentsDom.push({
+                'beAttack':beAttackLis.get(j),
+                'attack':attackLis.get(j),
+                'byte':byteLis.get(j),
+                'times':timesLis.get(j++)
+            });
+        }
+
+        // 垃圾回收
+        beAttackLis = attackLis = byteLis = timesLis = null;
+
+        var showContents = function (data,dur){
+
+
+            var firstTime;
+            var timer;
+            function setText(eles,datas){
+                eles.map(function(d,index){
+                   
+                   for(var i in d){
+                    d[i].innerText = datas[index][i];
+                   }
+
+                });
+            }
+
+            function shiftAndSet(){
+
+                var speed = data.length > 5 ? dur/data.length : false;
+                firstTime = true;
+
+                timer = setInterval(function(){
+
+
+                    if (!firstTime) {
+                        data.shift();
+                    }else
+                        firstTime = false;
+
+                    
+                    setText(contentsDom,data);
+
+                    if (data.length <= 5) {
+                        clearInterval(timer);
+                    }
+
+                },speed + 20);
+            }
+
+            shiftAndSet();
+        }
+
+        loadChart();
+
+
+    </script>
+</body>
+</html>
